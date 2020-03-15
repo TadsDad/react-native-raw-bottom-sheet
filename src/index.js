@@ -31,12 +31,11 @@ class RBSheet extends Component {
     this.createPanResponder(props);
   }
 
-  setModalVisible(visible, additionnalData = null) {
-    const { height, minClosingHeight, duration, onClose, onOpen } = this.props;
+  setModalVisible(visible) {
+    const { height, minClosingHeight, duration, onClose } = this.props;
     const { animatedHeight, pan } = this.state;
     if (visible) {
       this.setState({ modalVisible: visible });
-      if (typeof onOpen === "function") onOpen(additionnalData);
       Animated.timing(animatedHeight, {
         toValue: height,
         duration
@@ -58,15 +57,24 @@ class RBSheet extends Component {
   }
 
   createPanResponder(props) {
-    const { closeOnDragDown, height } = props;
+    const { height } = props;
     const { pan } = this.state;
     this.panResponder = PanResponder.create({
-      onStartShouldSetPanResponder: () => closeOnDragDown,
-      onPanResponderMove: (e, gestureState) => {
+     onStartShouldSetPanResponder: ({nativeEvent:{locationY}}) => {
+     
+        if(locationY <= props.dragToDownHeight){
+          return true
+        }else{
+          return false
+        }
+        
+     },
+      onPanResponderMove: (e, gestureState) => { 
         if (gestureState.dy > 0) {
           Animated.event([null, { dy: pan.y }])(e, gestureState);
         }
-      },
+        
+      },    
       onPanResponderRelease: (e, gestureState) => {
         if (height / 4 - gestureState.dy < 0) {
           this.setModalVisible(false);
@@ -77,8 +85,8 @@ class RBSheet extends Component {
     });
   }
 
-  open(additionnalData) {
-    this.setModalVisible(true, additionnalData);
+  open() {
+    this.setModalVisible(true);
   }
 
   close() {
@@ -92,8 +100,7 @@ class RBSheet extends Component {
       closeOnPressMask,
       closeOnPressBack,
       children,
-      customStyles,
-      keyboardAvoidingViewEnabled
+      customStyles
     } = this.props;
     const { animatedHeight, pan, modalVisible } = this.state;
     const panStyle = {
@@ -111,22 +118,23 @@ class RBSheet extends Component {
         }}
       >
         <KeyboardAvoidingView
-          enabled={keyboardAvoidingViewEnabled}
+          enabled={Platform.OS === "ios"}
           behavior="padding"
           style={[styles.wrapper, customStyles.wrapper]}
         >
           <TouchableOpacity
             style={styles.mask}
             activeOpacity={1}
+          
             onPress={() => (closeOnPressMask ? this.close() : null)}
           />
           <Animated.View
-            {...this.panResponder.panHandlers}
+           {...this.panResponder.panHandlers}
             style={[panStyle, styles.container, { height: animatedHeight }, customStyles.container]}
           >
             {closeOnDragDown && (
-              <View style={styles.draggableContainer}>
-                <View style={[styles.draggableIcon, customStyles.draggableIcon]} />
+              <View style={[styles.draggableContainer,{height : this.props.dragToDownHeight}]}>
+                <View style={customStyles.draggableIcon} />
               </View>
             )}
             {children}
@@ -141,14 +149,13 @@ RBSheet.propTypes = {
   animationType: PropTypes.oneOf(["none", "slide", "fade"]),
   height: PropTypes.number,
   minClosingHeight: PropTypes.number,
+  dragToDownHeight: PropTypes.number,
   duration: PropTypes.number,
   closeOnDragDown: PropTypes.bool,
   closeOnPressMask: PropTypes.bool,
   closeOnPressBack: PropTypes.bool,
-  keyboardAvoidingViewEnabled: PropTypes.bool,
   customStyles: PropTypes.objectOf(PropTypes.object),
   onClose: PropTypes.func,
-  onOpen: PropTypes.func,
   children: PropTypes.node
 };
 
@@ -157,10 +164,10 @@ RBSheet.defaultProps = {
   height: 260,
   minClosingHeight: 0,
   duration: 300,
+  dragToDownHeight:40,
   closeOnDragDown: false,
   closeOnPressMask: true,
   closeOnPressBack: true,
-  keyboardAvoidingViewEnabled: Platform.OS === "ios",
   customStyles: {},
   onClose: null,
   children: <View />
