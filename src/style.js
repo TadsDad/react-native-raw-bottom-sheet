@@ -18,15 +18,9 @@ const styles = StyleSheet.create({
   draggableContainer: {
     width: "100%",
     alignItems: "center",
-    backgroundColor: "transparent"
+    justifyContent:'center',
+    backgroundColor: "transparent",
   },
-  draggableIcon: {
-    width: 35,
-    height: 5,
-    borderRadius: 5,
-    margin: 10,
-    backgroundColor: "#ccc"
-  }
 });
 
 export default styles;
