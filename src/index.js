@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   Animated,
   PanResponder,
-  Platform
+  Platform,
+  Easing
 } from "react-native";
 import styles from "./style";
 
@@ -38,12 +39,13 @@ class RBSheet extends Component {
       this.setState({ modalVisible: visible });
       Animated.timing(animatedHeight, {
         toValue: height,
-        duration
+        duration,
+        easing: Easing.out(Easing.quad),
       }).start();
     } else {
       Animated.timing(animatedHeight, {
         toValue: minClosingHeight,
-        duration
+        duration,
       }).start(() => {
         pan.setValue({ x: 0, y: 0 });
         this.setState({
